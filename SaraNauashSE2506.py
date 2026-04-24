@@ -4,7 +4,6 @@ import os
 
 def check_access(func):
     def wrapper(self, current_user_role, *args, **kwargs):
-        # Теперь мы четко ловим role после self
         if isinstance(current_user_role, str) and current_user_role.lower() == "admin":
             return func(self, current_user_role, *args, **kwargs)
         else:
@@ -79,7 +78,6 @@ class TeamManager:
 if __name__ == "__main__":
     karasuno = TeamManager("Karasuno High")
 
-    # Игроки
     kageyama = Setter("Kageyama Tobio", 16, 90, 85, 95)
     hinata = Spiker("Hinata Shoyo", 16, 85, 100, 120)
     nishinoya = Libero("Nishinoya Yuu", 17, 70, 90, 98)
