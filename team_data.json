@@ -1,0 +1,16 @@
+{
+    "9": {
+        "name": "Kageyama",
+        "age": 16,
+        "power": 90,
+        "stamina": 85,
+        "role": "Setter"
+    },
+    "10": {
+        "name": "Hinata",
+        "age": 16,
+        "power": 85,
+        "stamina": 100,
+        "role": "Spiker"
+    }
+}

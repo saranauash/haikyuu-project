@@ -1,0 +1,6 @@
+Action: add_player by admin
+Action: add_player by admin
+Action: save_to_json by admin
+Action: add_player by admin
+Action: add_player by admin
+Action: save_to_json by admin

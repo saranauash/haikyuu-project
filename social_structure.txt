@@ -1,5 +1,4 @@
---- TEAM REPORT: Karasuno High ---
-Average Team Power: 88
-Roster:
-#9 Kageyama Tobio (Power: 90, Stamina: 85) - Role: Setter
-#10 Hinata Shoyo (Power: 85, Stamina: 100) - Role: Spiker
+Team: Karasuno High
+Efficiency: 89.83
+#9 Kageyama (P: 90, S: 85)
+#10 Hinata (P: 85, S: 100)
