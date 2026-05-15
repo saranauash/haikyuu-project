@@ -5,9 +5,12 @@ import os
 def check_access(func):
     def wrapper(self, current_user_role, *args, **kwargs):
         if isinstance(current_user_role, str) and current_user_role.lower() == "admin":
-            return func(self, current_user_role, *args, **kwargs)
+            result = func(self, current_user_role, *args, **kwargs)
+            with open("admin_log.txt", "a", encoding="utf-8") as log:
+                log.write(f"Action: {func.__name__} by admin\n")
+            return result
         else:
-            print(f"❌ ACCESS DENIED for role '{current_user_role}': Only 'admin' can perform this action.")
+            print(f"❌ ACCESS DENIED: {current_user_role}")
             return None
     return wrapper
 
@@ -19,7 +22,16 @@ class Player:
         self.stamina = stamina
 
     def get_info(self):
-        return f"{self.name} (Power: {self.power}, Stamina: {self.stamina})"
+        return f"{self.name} (P: {self.power}, S: {self.stamina})"
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "age": self.age,
+            "power": self.power,
+            "stamina": self.stamina,
+            "role": type(self).__name__
+        }
 
 class Setter(Player):
     def __init__(self, name, age, power, stamina, intelligence):
@@ -27,7 +39,7 @@ class Setter(Player):
         self.intelligence = intelligence
 
     def special_skill(self):
-        return f"🏐 {self.name} uses 'Tactical Toss' (Intel: {self.intelligence})"
+        return f"🏐 {self.name}: Tactical Toss ({self.intelligence})"
 
 class Spiker(Player):
     def __init__(self, name, age, power, stamina, jump_height):
@@ -35,7 +47,7 @@ class Spiker(Player):
         self.jump_height = jump_height
 
     def special_skill(self):
-        return f"🔥 {self.name} uses 'Power Spike' (Jump: {self.jump_height}cm)"
+        return f"🔥 {self.name}: Power Spike ({self.jump_height}cm)"
 
 class Libero(Player):
     def __init__(self, name, age, power, stamina, defense_rate):
@@ -43,7 +55,7 @@ class Libero(Player):
         self.defense_rate = defense_rate
 
     def special_skill(self):
-        return f"🛡️ {self.name} uses 'Rolling Receive' (Defense: {self.defense_rate})"
+        return f"🛡️ {self.name}: Rolling Receive ({self.defense_rate})"
 
 class TeamManager:
     def __init__(self, team_name):
@@ -52,77 +64,43 @@ class TeamManager:
 
     @check_access
     def add_player(self, current_user_role, number, player_obj):
-        """Добавление игрока в систему (Week 1-2)"""
         self.players[number] = player_obj
-        print(f"✅ Player {player_obj.name} added to {self.team_name} at number {number}.")
+        print(f"✅ Added #{number}")
 
-    
     @check_access
     def remove_player(self, current_user_role, number):
-        """Удаление игрока из системы (Week 2)"""
         if number in self.players:
-            removed_player = self.players.pop(number)
-            print(f"🗑️ Player {removed_player.name} removed from number {number}.")
-        else:
-            print(f"⚠️ Player with number {number} not found.")
+            self.players.pop(number)
+            print(f"🗑️ Removed #{number}")
 
     def find_player(self, number):
-        """Поиск игрока по номеру (Week 2)"""
-        player = self.players.get(number)
-        if player:
-            print(f"🔍 Found: {player.get_info()}")
-            return player
-        else:
-            print(f"⚠️ No player found at number {number}.")
-            return None
+        return self.players.get(number)
 
-    
-    def calculate_team_stats(self):
-        """Расчет средней силы команды (Week 3)"""
-        if not self.players:
-            return 0
-        total_power = sum(p.power for p in self.players.values())
-        avg_power = total_power / len(self.players)
-        return math.ceil(avg_power)
+    def calculate_efficiency_index(self):
+        if not self.players: return 0
+        total = sum(math.sqrt(p.power * p.stamina) for p in self.players.values())
+        return round(total / len(self.players), 2)
+
+    @check_access
+    def save_to_json(self, current_user_role, filename="team_data.json"):
+        data = {str(k): v.to_dict() for k, v in self.players.items()}
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+        print(f"💾 Saved to {filename}")
 
     def export_report(self, filename="social_structure.txt"):
-        """Экспорт отчета в файл (Week 4)"""
-        avg_p = self.calculate_team_stats()
-        try:
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"--- TEAM REPORT: {self.team_name} ---\n")
-                f.write(f"Average Team Power: {avg_p}\n")
-                f.write("Roster:\n")
-                for num, p in self.players.items():
-                    f.write(f"#{num} {p.get_info()} - Role: {type(p).__name__}\n")
-            print(f"📄 Report exported to {filename}")
-        except Exception as e:
-            print(f"Error saving file: {e}")
+        idx = self.calculate_efficiency_index()
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"Team: {self.team_name}\nEfficiency: {idx}\n")
+            for n, p in self.players.items():
+                f.write(f"#{n} {p.get_info()}\n")
+        print(f"📄 Exported to {filename}")
 
 if __name__ == "__main__":
     karasuno = TeamManager("Karasuno High")
-
-    kageyama = Setter("Kageyama Tobio", 16, 90, 85, 95)
-    hinata = Spiker("Hinata Shoyo", 16, 85, 100, 120)
-    nishinoya = Libero("Nishinoya Yuu", 17, 70, 90, 98)
-
-    print("--- Week 1 & 2: Testing Management System ---")
+    karasuno.add_player("admin", 9, Setter("Kageyama", 16, 90, 85, 95))
+    karasuno.add_player("admin", 10, Spiker("Hinata", 16, 85, 100, 120))
     
-    karasuno.add_player("admin", 9, kageyama) 
-    karasuno.add_player("admin", 10, hinata)
-    karasuno.add_player("admin", 4, nishinoya)
-
-    karasuno.find_player(10)
-    
-    karasuno.remove_player("admin", 4)
-    
-    karasuno.add_player("guest", 1, Player("Test User", 20, 50, 50)) 
-
-    print("\n--- Final Team Status ---")
-    print(f"Average Team Power: {karasuno.calculate_team_stats()}")
-    
-    for p in karasuno.players.values():
-        if hasattr(p, 'special_skill'):
-            print(p.special_skill())
-
+    print(f"Efficiency: {karasuno.calculate_efficiency_index()}")
+    karasuno.save_to_json("admin")
     karasuno.export_report()
